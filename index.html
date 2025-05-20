@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Ponto Digital</title>
+    <style>
+        :root {
+            --primary: #25D366;
+            --primary-dark: #128C7E;
+            --secondary: #075E54;
+            --light: #f5f5f5;
+            --dark: #333;
+            --gray: #ddd;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f9f9f9;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--gray);
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background 0.3s;
+            display: inline-block;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #05433d;
+        }
+        
+        .registros {
+            margin-top: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        th {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .status {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .action-buttons .btn {
+            flex: 1;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Registro de Ponto Digital</h1>
+            <p>Registre sua jornada de trabalho com facilidade</p>
+        </header>
+        
+        <div class="card">
+            <div id="status-message" class="status" style="display: none;"></div>
+            
+            <div class="form-group">
+                <label for="evento">Nome do Evento (opcional)</label>
+                <input type="text" id="evento" placeholder="Ex: Reunião com cliente, Chegada no local">
+            </div>
+            
+            <div class="form-group">
+                <label for="tipo-registro">Tipo de Registro</label>
+                <select id="tipo-registro" required>
+                    <option value="">Selecione o tipo</option>
+                    <option value="chegada">Chegada</option>
+                    <option value="saida">Saída</option>
+                    <option value="evento">Evento</option>
+                    <option value="observacao">Observação</option>
+                    <option value="outro">Outro</option>
+                </select>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="registrar-btn" class="btn">Registrar Evento</button>
+                <button id="limpar-btn" class="btn btn-secondary">Limpar Registros</button>
+            </div>
+        </div>
+        
+        <div class="card registros">
+            <h2>Histórico de Registros</h2>
+            <div class="table-responsive">
+                <table id="registros-table">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Evento</th>
+                            <th>Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="registros-body">
+                        <!-- Registros serão inseridos aqui via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const eventoInput = document.getElementById('evento');
+            const tipoRegistroSelect = document.getElementById('tipo-registro');
+            const registrarBtn = document.getElementById('registrar-btn');
+            const limparBtn = document.getElementById('limpar-btn');
+            const registrosBody = document.getElementById('registros-body');
+            const statusMessage = document.getElementById('status-message');
+            
+            // Carrega registros do localStorage
+            loadRegistros();
+            
+            // Evento de registro
+            registrarBtn.addEventListener('click', function() {
+                const evento = eventoInput.value.trim();
+                const tipo = tipoRegistroSelect.value;
+                
+                if (!tipo) {
+                    showStatus('Por favor, selecione um tipo de registro.', 'error');
+                    return;
+                }
+                
+                const now = new Date();
+                const dataHora = formatDateTime(now);
+                
+                // Cria objeto de registro
+                const registro = {
+                    evento: evento || 'Sem descrição',
+                    tipo: tipo,
+                    dataHora: dataHora,
+                    timestamp: now.getTime()
+                };
+                
+                // Salva no localStorage
+                saveRegistro(registro);
+                
+                // Atualiza a tabela
+                addRegistroToTable(registro);
+                
+                // Envia mensagem pelo WhatsApp
+                sendWhatsAppMessage(registro);
+                
+                // Mostra mensagem de sucesso
+                showStatus(`Ponto registrado com sucesso: ${getTipoDescricao(tipo)}`, 'success');
+                
+                // Limpa campos
+                eventoInput.value = '';
+                tipoRegistroSelect.value = '';
+            });
+            
+            // Evento para limpar registros
+            limparBtn.addEventListener('click', function() {
+                if (confirm('Tem certeza que deseja apagar todos os registros?')) {
+                    localStorage.removeItem('registrosDeEvento');
+                    registrosBody.innerHTML = '';
+                    showStatus('Todos os registros foram removidos.', 'success');
+                }
+            });
+            
+            // Função para salvar registro no localStorage
+            function saveRegistro(registro) {
+                let registros = JSON.parse(localStorage.getItem('registrosDeEvento')) || [];
+                registros.push(registro);
+                localStorage.setItem('registrosDeEvento', JSON.stringify(registros));
+            }
+            
+            // Função para carregar registros do localStorage
+            function loadRegistros() {
+                const registros = JSON.parse(localStorage.getItem('registrosDeEvento')) || [];
+                registros.forEach(registro => addRegistroToTable(registro));
+            }
+            
+            // Função para adicionar registro à tabela
+            function addRegistroToTable(registro) {
+                const row = document.createElement('tr');
+                
+                const cellData = document.createElement('td');
+                cellData.textContent = registro.dataHora;
+                
+                const cellEvento = document.createElement('td');
+                cellEvento.textContent = registro.evento;
+                
+                const cellTipo = document.createElement('td');
+                cellTipo.textContent = getTipoDescricao(registro.tipo);
+                
+                row.appendChild(cellData);
+                row.appendChild(cellEvento);
+                row.appendChild(cellTipo);
+                
+                registrosBody.prepend(row);
+            }
+            
+            // Função para enviar mensagem via WhatsApp
+            function sendWhatsAppMessage(registro) {
+                const phoneNumber = '5541996833663';
+                const message = `Registro de Ponto Digital%0A%0A${registro.evento}%0ATipo: ${getTipoDescricao(registro.tipo)}%0AData/Hora: ${registro.dataHora}`;
+                
+                const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+                
+                // Abre em nova aba (não é possível enviar diretamente sem interação do usuário)
+                window.open(whatsappUrl, '_blank');
+            }
+            
+            // Funções auxiliares
+            function formatDateTime(date) {
+                const day = date.getDate().toString().padStart(2, '0');
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const year = date.getFullYear();
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                
+                return `${day}/${month}/${year} ${hours}:${minutes}`;
+            }
+            
+            function getTipoDescricao(tipo) {
+                const tipos = {
+                    'chegada': 'Chegada',
+                    'saida': 'Saída',
+                    'evento': 'Evento',
+                    'observacao': 'Observação',
+                    'outro': 'Outro'
+                };
+                return tipos[tipo] || tipo;
+            }
+            
+            function showStatus(message, type) {
+                statusMessage.textContent = message;
+                statusMessage.className = `status ${type}`;
+                statusMessage.style.display = 'flex';
+                
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>
